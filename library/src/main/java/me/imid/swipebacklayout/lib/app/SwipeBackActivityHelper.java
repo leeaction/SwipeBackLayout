@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 
 import me.imid.swipebacklayout.lib.SwipeBackLayout;
 import me.imid.swipebacklayout.lib.TranslucentConversionListener;
@@ -86,6 +87,7 @@ public class SwipeBackActivityHelper {
         ObjectAnimator animator = ObjectAnimator.ofInt(view, "backgroundColor", mDefaultBackgroundColor, 0x00ffffff);
         animator.setDuration(500);//时间1s
         animator.setEvaluator(new ArgbEvaluator());
+        animator.setInterpolator(new DecelerateInterpolator());
         animator.start();
     }
 }

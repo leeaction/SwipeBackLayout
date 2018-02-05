@@ -112,6 +112,8 @@ public class SwipeBackLayout extends FrameLayout {
 
     private int mScrimColor = DEFAULT_SCRIM_COLOR;
 
+    private boolean mScrimEnable = true;
+
     private boolean mInLayout;
 
     private Rect mTmpRect = new Rect();
@@ -210,6 +212,10 @@ public class SwipeBackLayout extends FrameLayout {
     public void setScrimColor(int color) {
         mScrimColor = color;
         invalidate();
+    }
+
+    public void setScrimEnable(boolean enable){
+        mScrimEnable = enable;
     }
 
     /**
@@ -410,6 +416,9 @@ public class SwipeBackLayout extends FrameLayout {
     }
 
     private void drawScrim(Canvas canvas, View child) {
+        if(!mScrimEnable){
+            return;
+        }
         final int baseAlpha = (mScrimColor & 0xff000000) >>> 24;
         final int alpha = (int) (baseAlpha * mScrimOpacity);
         final int color = alpha << 24 | (mScrimColor & 0xffffff);

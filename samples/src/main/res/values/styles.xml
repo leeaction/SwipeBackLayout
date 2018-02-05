@@ -5,7 +5,7 @@
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
     <style name="AppBaseTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowIsTranslucent">true</item>
+        <!-- <item name="android:windowIsTranslucent">true</item> -->
     </style>
 
     <!-- Application theme. -->

@@ -5,7 +5,9 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.os.Build;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 /**
  * Created by Chaojun Wang on 6/9/14.
@@ -47,18 +49,18 @@ public class Utils {
      * This call has no effect on non-translucent activities or on activities
      * with the {@link android.R.attr#windowIsFloating} attribute.
      */
-    public static void convertActivityToTranslucent(Activity activity) {
+    public static void convertActivityToTranslucent(Activity activity,TranslucentConversionListener listener) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            convertActivityToTranslucentAfterL(activity);
+            convertActivityToTranslucentAfterL(activity,listener);
         } else {
-            convertActivityToTranslucentBeforeL(activity);
+            convertActivityToTranslucentBeforeL(activity,null);
         }
     }
 
     /**
      * Calling the convertToTranslucent method on platforms before Android 5.0
      */
-    public static void convertActivityToTranslucentBeforeL(Activity activity) {
+    public static void convertActivityToTranslucentBeforeL(Activity activity,TranslucentConversionListener listener) {
         try {
             Class<?>[] classes = Activity.class.getDeclaredClasses();
             Class<?> translucentConversionListenerClazz = null;
@@ -80,7 +82,7 @@ public class Utils {
     /**
      * Calling the convertToTranslucent method on platforms after Android 5.0
      */
-    private static void convertActivityToTranslucentAfterL(Activity activity) {
+    private static void convertActivityToTranslucentAfterL(Activity activity,TranslucentConversionListener listener) {
         try {
             Method getActivityOptions = Activity.class.getDeclaredMethod("getActivityOptions");
             getActivityOptions.setAccessible(true);
@@ -96,8 +98,32 @@ public class Utils {
             Method convertToTranslucent = Activity.class.getDeclaredMethod("convertToTranslucent",
                     translucentConversionListenerClazz, ActivityOptions.class);
             convertToTranslucent.setAccessible(true);
-            convertToTranslucent.invoke(activity, null, options);
+            Object TCLProxy = null;
+            if(listener != null){
+                TCLProxy = Proxy.newProxyInstance(translucentConversionListenerClazz.getClassLoader(),new Class[]{translucentConversionListenerClazz}, new TranslucentConversionListenerInvocationHandler(listener));
+            }
+            convertToTranslucent.invoke(activity, TCLProxy, options);
         } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
+    private static class TranslucentConversionListenerInvocationHandler implements InvocationHandler{
+
+        private TranslucentConversionListener mListener;
+
+        public TranslucentConversionListenerInvocationHandler(TranslucentConversionListener listener){
+            mListener = listener;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("onTranslucentConversionComplete")) {
+                if(mListener != null){
+                    mListener.onTranslucentConversionComplete();
+                }
+            }
+            return null;
         }
     }
 }

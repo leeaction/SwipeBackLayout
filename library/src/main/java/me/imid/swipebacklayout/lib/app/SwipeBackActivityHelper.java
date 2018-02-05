@@ -1,5 +1,7 @@
 package me.imid.swipebacklayout.lib.app;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -7,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import me.imid.swipebacklayout.lib.SwipeBackLayout;
+import me.imid.swipebacklayout.lib.TranslucentConversionListener;
 import me.imid.swipebacklayout.lib.Utils;
 
 /**
@@ -17,14 +20,25 @@ public class SwipeBackActivityHelper {
 
     private SwipeBackLayout mSwipeBackLayout;
 
+    private int mDefaultBackgroundColor = 0xBFFFFFFF;
+
     public SwipeBackActivityHelper(Activity activity) {
         mActivity = activity;
+    }
+
+    public void setDefaultBackgroundColor(int defaultBackgroundColor) {
+        this.mDefaultBackgroundColor = defaultBackgroundColor;
     }
 
     @SuppressWarnings("deprecation")
     public void onActivityCreate() {
         mActivity.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        mActivity.getWindow().getDecorView().setBackgroundDrawable(null);
+        if(mDefaultBackgroundColor != -1){
+            mActivity.getWindow().getDecorView().setBackgroundDrawable(new ColorDrawable(mDefaultBackgroundColor));
+        }else{
+            mActivity.getWindow().getDecorView().setBackgroundDrawable(null);
+        }
+
         mSwipeBackLayout = (SwipeBackLayout) LayoutInflater.from(mActivity).inflate(
                 me.imid.swipebacklayout.lib.R.layout.swipeback_layout, null);
         mSwipeBackLayout.addSwipeListener(new SwipeBackLayout.SwipeListener() {
@@ -34,7 +48,13 @@ public class SwipeBackActivityHelper {
 
             @Override
             public void onEdgeTouch(int edgeFlag) {
-                Utils.convertActivityToTranslucent(mActivity);
+                Utils.convertActivityToTranslucent(mActivity, new TranslucentConversionListener() {
+                    @Override
+                    public void onTranslucentConversionComplete() {
+                        View decorView = mActivity.getWindow().getDecorView();
+                        doBackgroundAnimation(decorView);
+                    }
+                });
             }
 
             @Override
@@ -57,5 +77,15 @@ public class SwipeBackActivityHelper {
 
     public SwipeBackLayout getSwipeBackLayout() {
         return mSwipeBackLayout;
+    }
+
+    protected void doBackgroundAnimation(View view){
+        if(mDefaultBackgroundColor == -1){
+            return;
+        }
+        ObjectAnimator animator = ObjectAnimator.ofInt(view, "backgroundColor", mDefaultBackgroundColor, 0x00ffffff);
+        animator.setDuration(500);//时间1s
+        animator.setEvaluator(new ArgbEvaluator());
+        animator.start();
     }
 }
